@@ -1,8 +1,5 @@
-import contextlib
-
 from darksecret import read_secret
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 
 
 class DbBase:
@@ -12,7 +9,13 @@ class DbBase:
         self.pool_size = pool_size  # 连接池大小
         self.max_overflow = max_overflow  # 连接池最大的大小
         self.pool_recycle = pool_recycle  # 多久时间主动回收连接
-        self.session = self.get_session()  # 链接会话
+        self.engine = create_engine(
+            self.uri,
+            echo=self.echo,
+            pool_size=self.pool_size,
+            max_overflow=self.max_overflow,
+            pool_recycle=self.pool_recycle,
+        )
 
     def execute_sql(self, sql):
         """
@@ -21,39 +24,7 @@ class DbBase:
         :return:
         """
         try:
-            with self.user_session() as s:
-                db_data = s.execute(text(sql)).fetchall()
-                return True, db_data
+            with self.engine.connect() as conn:
+                return True, conn.execute(sql).fetchall()
         except Exception as e:
             return False, e
-
-    def get_session(self):
-        """
-        获取上下文对象session
-        :return:session
-        """
-        engine = create_engine(
-            self.uri,
-            echo=self.echo,
-            pool_size=self.pool_size,
-            max_overflow=self.max_overflow,
-            pool_recycle=self.pool_recycle,
-        )
-        session = sessionmaker(bind=engine)
-        return session
-
-    @contextlib.contextmanager
-    def user_session(self):
-        """
-        使用session对数据库进行操作，支持上下文
-        :return: session上下文对象
-        """
-        self.s = self.session()
-        try:
-            yield self.s
-            self.s.commit()
-        except Exception as e:
-            self.s.rollback()
-            raise e
-        finally:
-            self.s.close()

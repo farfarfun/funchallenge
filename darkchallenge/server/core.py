@@ -1,4 +1,7 @@
-from darksecret import read_secret
-read_secret("darkchat", "darkchallenge", "db", "uri",
-            value="mysql+pymysql://notechallenge:notechallenge@127.0.0.1:3306/notechallenge")
+from darkchallenge.db.base import DbBase
 
+db = DbBase()
+
+data = db.execute_sql('select * from dark_challenge_2048')
+
+print(data)
