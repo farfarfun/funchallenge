@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 import time
 
 
-install_requires = ['sqlalchemy','darksecret']
+install_requires = ['sqlalchemy','darksecret','pymysql']
 
 setup(name='darkchallenge',
       version=time.strftime("%Y%m%d%H%M", time.localtime()),
