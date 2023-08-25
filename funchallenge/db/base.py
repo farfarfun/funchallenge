@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, text
 
 class DbBase:
     def __init__(self, pool_size=int(5), max_overflow=int(20), pool_recycle=int(120)):
-        self.uri = read_secret("darkchat", "darkchallenge", "db", "uri")
+        self.uri = read_secret("farfarfun", "darkchallenge", "db", "uri")
         print(self.uri)
         self.engine = create_engine(
             self.uri,
