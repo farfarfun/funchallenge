@@ -1,4 +1,4 @@
-from darkchallenge.db.base import DbBase
+from funchallenge.db.base import DbBase
 
 db = DbBase()
 

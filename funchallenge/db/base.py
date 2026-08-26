@@ -1,4 +1,4 @@
-from darksecret import read_secret
+from nltsecret import read_secret
 from sqlalchemy import create_engine, text
 
 
