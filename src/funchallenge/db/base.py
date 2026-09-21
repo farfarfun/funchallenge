@@ -14,8 +14,7 @@ logger = getLogger("funchallenge")
 class DatabaseError(Exception):
     """数据库操作相关异常。
 
-    携带失败时的 SQL 语句等上下文信息，原始异常通过 ``raise ... from e``
-    保留在 ``__cause__`` 中，便于排查问题。
+    原始异常通过 ``raise ... from e`` 保留在 ``__cause__`` 中，便于排查问题。
     """
 
 
@@ -61,13 +60,13 @@ class DbBase:
             查询结果的行集合（``fetchall()`` 的返回值）。
 
         Raises:
-            DatabaseError: SQL 执行失败时抛出，异常信息中包含失败的 SQL
-                语句，原始异常通过 ``raise ... from e`` 保留在
-                ``__cause__`` 中。
+            DatabaseError: SQL 执行失败时抛出。为避免泄露查询中的凭据，
+                异常信息和日志不会包含 SQL 内容；原始异常通过
+                ``raise ... from e`` 保留在 ``__cause__`` 中。
         """
         try:
             with self.engine.connect() as conn:
                 return conn.execute(text(sql)).fetchall()
         except Exception as e:
-            logger.error(f"SQL 执行失败: {sql}")
-            raise DatabaseError(f"SQL 执行失败: {sql}") from e
+            logger.error("SQL 执行失败（查询语句已省略）")
+            raise DatabaseError("SQL 执行失败（查询语句已省略）") from e

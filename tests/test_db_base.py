@@ -50,8 +50,23 @@ def test_execute_sql_failure_raises_database_error(sqlite_db: DbBase) -> None:
     with pytest.raises(DatabaseError) as exc_info:
         sqlite_db.execute_sql("SELECT * FROM no_such_table")
 
-    assert "no_such_table" in str(exc_info.value)
+    assert "no_such_table" not in str(exc_info.value)
     assert exc_info.value.__cause__ is not None
+
+
+def test_execute_sql_failure_does_not_log_sql(
+    sqlite_db: DbBase, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """失败日志和异常文本均不得泄露 SQL 中的敏感值。"""
+    messages: list[str] = []
+    monkeypatch.setattr(base_module.logger, "error", messages.append)
+    secret_sql = "SELECT * FROM no_such_table WHERE token = 'secret-token'"
+
+    with pytest.raises(DatabaseError) as exc_info:
+        sqlite_db.execute_sql(secret_sql)
+
+    assert all(secret_sql not in message for message in messages)
+    assert "secret-token" not in str(exc_info.value)
 
 
 def test_db_base_does_not_print_credentials(
