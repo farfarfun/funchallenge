@@ -6,7 +6,10 @@
 
 from __future__ import annotations
 
+from typing import Any, get_type_hints
+
 import pytest
+from sqlalchemy.engine import Row
 
 from funchallenge.db.base import DatabaseError
 from funchallenge.server import core
@@ -49,6 +52,13 @@ def test_fetch_dark_challenge_2048_propagates_database_error(
 
     with pytest.raises(DatabaseError):
         core.fetch_dark_challenge_2048()
+
+
+def test_fetch_return_annotation_is_parameterized() -> None:
+    """公开入口的返回标注必须是 `list[Row[Any]]`，不能退回裸 `list`。"""
+    hints = get_type_hints(core.fetch_dark_challenge_2048)
+
+    assert hints["return"] == list[Row[Any]]
 
 
 def test_module_import_has_no_side_effects() -> None:

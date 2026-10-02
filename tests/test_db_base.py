@@ -5,8 +5,12 @@
 
 from __future__ import annotations
 
+from typing import Any, get_args, get_type_hints
+
 import pytest
 from sqlalchemy import text
+from sqlalchemy.engine import Row
+from sqlalchemy.exc import SQLAlchemyError
 
 from funchallenge.db import base as base_module
 from funchallenge.db.base import DatabaseError, DbBase
@@ -58,6 +62,7 @@ def test_execute_sql_does_not_wrap_non_database_errors(
     sqlite_db: DbBase, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """编程错误应保留原始异常类型，不能伪装成数据库故障。"""
+
     def invalid_text(_sql: str) -> None:
         raise ValueError("invalid SQL input")
 
@@ -65,6 +70,27 @@ def test_execute_sql_does_not_wrap_non_database_errors(
 
     with pytest.raises(ValueError, match="invalid SQL input"):
         sqlite_db.execute_sql("SELECT 1")
+
+
+def test_execute_sql_wraps_dbapi_errors(sqlite_db: DbBase) -> None:
+    """DBAPI 层面的错误（如主键冲突）仍必须被转换为 `DatabaseError`。
+
+    `except` 范围从 `Exception` 收窄到 `SQLAlchemyError` 后，这条路径容易被
+    收窄过头，所以单独守一个用例：原始异常应是 `SQLAlchemyError` 子类。
+    """
+    with pytest.raises(DatabaseError) as exc_info:
+        sqlite_db.execute_sql(
+            "INSERT INTO dark_challenge_2048 (id, score) VALUES (1, 1)"
+        )
+
+    assert isinstance(exc_info.value.__cause__, SQLAlchemyError)
+
+
+def test_execute_sql_return_annotation_is_parameterized() -> None:
+    """公开 API 的返回标注必须是参数化泛型，不能退回裸 `list`/`Sequence`。"""
+    hints = get_type_hints(DbBase.execute_sql)
+
+    assert get_args(hints["return"]) == (Row[Any],)
 
 
 def test_execute_sql_failure_does_not_log_sql(
