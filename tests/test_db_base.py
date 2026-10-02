@@ -54,6 +54,19 @@ def test_execute_sql_failure_raises_database_error(sqlite_db: DbBase) -> None:
     assert exc_info.value.__cause__ is not None
 
 
+def test_execute_sql_does_not_wrap_non_database_errors(
+    sqlite_db: DbBase, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """编程错误应保留原始异常类型，不能伪装成数据库故障。"""
+    def invalid_text(_sql: str) -> None:
+        raise ValueError("invalid SQL input")
+
+    monkeypatch.setattr(base_module, "text", invalid_text)
+
+    with pytest.raises(ValueError, match="invalid SQL input"):
+        sqlite_db.execute_sql("SELECT 1")
+
+
 def test_execute_sql_failure_does_not_log_sql(
     sqlite_db: DbBase, monkeypatch: pytest.MonkeyPatch
 ) -> None:

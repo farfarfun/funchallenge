@@ -7,6 +7,7 @@ from farlog import getLogger
 from funsecret import read_secret
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, Row
+from sqlalchemy.exc import SQLAlchemyError
 
 logger = getLogger("funchallenge")
 
@@ -67,6 +68,6 @@ class DbBase:
         try:
             with self.engine.connect() as conn:
                 return conn.execute(text(sql)).fetchall()
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.error("SQL 执行失败（查询语句已省略）")
             raise DatabaseError("SQL 执行失败（查询语句已省略）") from e

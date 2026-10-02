@@ -6,14 +6,17 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from farlog import getLogger
+from sqlalchemy.engine import Row
 
 from funchallenge.db.base import DatabaseError, DbBase
 
 logger = getLogger("funchallenge")
 
 
-def fetch_dark_challenge_2048() -> list:
+def fetch_dark_challenge_2048() -> list[Row[Any]]:
     """查询 ``dark_challenge_2048`` 表的全部数据。
 
     Returns:
