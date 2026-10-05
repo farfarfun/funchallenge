@@ -11,6 +11,16 @@ from sqlalchemy.exc import SQLAlchemyError
 
 logger = getLogger("funchallenge")
 
+_SQL_OPERATIONS = frozenset(
+    {"SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP"}
+)
+
+
+def _operation_name(sql: str) -> str:
+    """返回可安全写入日志的 SQL 操作类型，不记录 SQL 内容。"""
+    operation = sql.lstrip().split(maxsplit=1)[0].upper() if sql.strip() else ""
+    return operation if operation in _SQL_OPERATIONS else "未知"
+
 
 class DatabaseError(Exception):
     """数据库操作相关异常。
@@ -69,5 +79,9 @@ class DbBase:
             with self.engine.connect() as conn:
                 return conn.execute(text(sql)).fetchall()
         except SQLAlchemyError as e:
-            logger.error("SQL 执行失败（查询语句已省略）")
-            raise DatabaseError("SQL 执行失败（查询语句已省略）") from e
+            context = (
+                f"操作: {_operation_name(sql)}；数据库错误: {type(e).__name__}；"
+                "查询语句已省略"
+            )
+            logger.error(f"SQL 执行失败（{context}）")
+            raise DatabaseError(f"SQL 执行失败（{context}）") from e
