@@ -7,6 +7,20 @@
 > `DbBase.execute_sql` 的返回签名由 `(bool, 结果或异常)` 改为直接返回结果、
 > 失败时抛 `DatabaseError`（详见 `0.0.2` 的「变更」一节）。
 
+迁移时，将旧的返回值判断替换为异常处理：
+
+```python
+# 旧：ok, result = db.execute_sql(sql); if not ok: handle_query_error(result)
+try:
+    rows = db.execute_sql(sql)
+except DatabaseError as error:
+    handle_query_error(error)
+```
+
+成功路径中的 `rows` 是查询结果；失败路径不再返回异常对象，而是抛出
+`DatabaseError`，其 `__cause__` 保留原始 SQLAlchemy 异常。完整迁移示例见
+README 的「从 0.0.2 迁移」。
+
 ### 修复
 
 - `DbBase.execute_sql` 失败时，日志与 `DatabaseError` 的消息不再包含被执行的

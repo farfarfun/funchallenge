@@ -55,6 +55,8 @@ def test_execute_sql_failure_raises_database_error(sqlite_db: DbBase) -> None:
         sqlite_db.execute_sql("SELECT * FROM no_such_table")
 
     assert "no_such_table" not in str(exc_info.value)
+    assert "操作: SELECT" in str(exc_info.value)
+    assert "数据库错误: OperationalError" in str(exc_info.value)
     assert exc_info.value.__cause__ is not None
 
 
@@ -106,6 +108,7 @@ def test_execute_sql_failure_does_not_log_sql(
 
     assert all(secret_sql not in message for message in messages)
     assert "secret-token" not in str(exc_info.value)
+    assert "操作: SELECT" in str(exc_info.value)
 
 
 def test_db_base_does_not_print_credentials(
