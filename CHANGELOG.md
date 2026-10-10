@@ -10,11 +10,11 @@
 迁移时，将旧的返回值判断替换为异常处理：
 
 ```python
-# 旧：ok, result = db.execute_sql(sql); if not ok: handle_query_error(result)
+# 旧：ok, result = db.execute_sql(sql); if not ok: print(result)
 try:
     rows = db.execute_sql(sql)
 except DatabaseError as error:
-    handle_query_error(error)
+    print(f"查询失败: {error}")
 ```
 
 成功路径中的 `rows` 是查询结果；失败路径不再返回异常对象，而是抛出
