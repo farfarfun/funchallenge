@@ -74,17 +74,18 @@ ok, result = db.execute_sql("select * from dark_challenge_2048")
 if ok:
     rows = result
 else:
-    handle_query_error(result)
+    print(f"查询失败: {result}")
 ```
 
 ```python
 # 0.0.3
-from funchallenge.db.base import DatabaseError
+from funchallenge.db.base import DatabaseError, DbBase
 
+db = DbBase()
 try:
     rows = db.execute_sql("select * from dark_challenge_2048")
 except DatabaseError as error:
-    handle_query_error(error)
+    print(f"查询失败: {error}")
 ```
 
 ---
